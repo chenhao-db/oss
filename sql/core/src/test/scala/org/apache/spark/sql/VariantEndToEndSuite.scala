@@ -180,7 +180,7 @@ class VariantEndToEndSuite extends SharedSparkSession {
     val variantDF = df.select(parse_json(col("v")))
     val plan = variantDF.queryExecution.executedPlan
     assert(plan.isInstanceOf[WholeStageCodegenExec])
-    val v = VariantBuilder.parseJson("""{"a":1}""", false)
+    val v = VariantBuilder.parseJson("""{"a":1}""", false, false)
     val expected = new VariantVal(v.getValue, v.getMetadata)
     checkAnswer(variantDF, Seq(Row(expected)))
   }

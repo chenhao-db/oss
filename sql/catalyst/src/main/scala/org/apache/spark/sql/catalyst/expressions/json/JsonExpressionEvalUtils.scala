@@ -111,7 +111,8 @@ case class JsonToStructsEvaluator(
     nullableSchema: DataType,
     nameOfCorruptRecord: String,
     timeZoneId: Option[String],
-    variantAllowDuplicateKeys: Boolean) {
+    variantAllowDuplicateKeys: Boolean,
+    variantStringStrictUtf8: Boolean) {
 
   // This converts parsed rows to the desired output by the given schema.
   @transient

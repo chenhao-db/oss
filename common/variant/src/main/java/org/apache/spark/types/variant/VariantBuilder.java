@@ -42,8 +42,9 @@ import static org.apache.spark.types.variant.VariantUtil.*;
  * Build variant value and metadata by parsing JSON values.
  */
 public class VariantBuilder {
-  public VariantBuilder(boolean allowDuplicateKeys) {
+  public VariantBuilder(boolean allowDuplicateKeys, boolean stringStrictUtf8) {
     this.allowDuplicateKeys = allowDuplicateKeys;
+    this.stringStrictUtf8 = stringStrictUtf8;
   }
 
   /**
@@ -52,19 +53,21 @@ public class VariantBuilder {
    * the SIZE_LIMIT (for example, this could be a maximum of 16 MiB).
    * @throws IOException if any JSON parsing error happens.
    */
-  public static Variant parseJson(String json, boolean allowDuplicateKeys) throws IOException {
+  public static Variant parseJson(String json, boolean allowDuplicateKeys,
+      boolean stringStrictUtf8) throws IOException {
     try (JsonParser parser = new JsonFactory().createParser(json)) {
       parser.nextToken();
-      return parseJson(parser, allowDuplicateKeys);
+      return parseJson(parser, allowDuplicateKeys, stringStrictUtf8);
     }
   }
 
   /**
-   * Similar {@link #parseJson(String, boolean)}, but takes a JSON parser instead of string input.
+   * Similar to {@link #parseJson(String, boolean, boolean)}, but takes a JSON parser instead of
+   * string input.
    */
-  public static Variant parseJson(JsonParser parser, boolean allowDuplicateKeys)
-      throws IOException {
-    VariantBuilder builder = new VariantBuilder(allowDuplicateKeys);
+  public static Variant parseJson(JsonParser parser, boolean allowDuplicateKeys,
+      boolean stringStrictUtf8) throws IOException {
+    VariantBuilder builder = new VariantBuilder(allowDuplicateKeys, stringStrictUtf8);
     builder.buildJson(parser);
     return builder.result();
   }
@@ -118,6 +121,10 @@ public class VariantBuilder {
   }
 
   public void appendString(String str) {
+    if (stringStrictUtf8 && !isValidUtf16(str)) {
+      throw new SparkRuntimeException("VARIANT_INVALID_UTF8_STRING",
+          Map$.MODULE$.<String, String>empty(), null, new QueryContext[]{}, "");
+    }
     byte[] text = str.getBytes(StandardCharsets.UTF_8);
     boolean longStr = text.length > MAX_SHORT_STR_SIZE;
     checkCapacity((longStr ? 1 + U32_SIZE : 1) + text.length);
@@ -575,6 +582,26 @@ public class VariantBuilder {
     return false;
   }
 
+  // Returns true if `str` is well-formed UTF-16, i.e. every high surrogate is paired with a
+  // following low surrogate and no unpaired low surrogate exists. A Java String containing
+  // unpaired surrogates would silently encode to U+FFFD when converted to UTF-8, which is
+  // undesirable when strict UTF-8 is required.
+  private static boolean isValidUtf16(String str) {
+    int len = str.length();
+    for (int i = 0; i < len; ++i) {
+      char c = str.charAt(i);
+      if (Character.isHighSurrogate(c)) {
+        if (i + 1 >= len || !Character.isLowSurrogate(str.charAt(i + 1))) {
+          return false;
+        }
+        ++i;
+      } else if (Character.isLowSurrogate(c)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   // The write buffer in building the variant value. Its first `writePos` bytes has been written.
   private byte[] writeBuffer = new byte[128];
   private int writePos = 0;
@@ -583,4 +610,8 @@ public class VariantBuilder {
   // Store all keys in `dictionary` in the order of id.
   private final ArrayList<byte[]> dictionaryKeys = new ArrayList<>();
   private final boolean allowDuplicateKeys;
+  // When true, `appendString` rejects any input that is not well-formed UTF-16 (and therefore
+  // would not round-trip through UTF-8 cleanly). When false, the legacy lenient behavior is
+  // used: invalid surrogates are silently replaced with U+FFFD by `String.getBytes`.
+  private final boolean stringStrictUtf8;
 }

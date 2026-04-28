@@ -8523,6 +8523,12 @@
     ],
     "sqlState" : "22023"
   },
+  "VARIANT_INVALID_UTF8_STRING" : {
+    "message" : [
+      "Failed to build variant because the input string is not valid UTF-8."
+    ],
+    "sqlState" : "22023"
+  },
   "VARIANT_SIZE_LIMIT" : {
     "message" : [
       "Cannot build variant bigger than <sizeLimit> in <functionName>.",

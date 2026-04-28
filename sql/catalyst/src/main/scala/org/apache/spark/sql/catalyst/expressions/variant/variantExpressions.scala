@@ -62,8 +62,9 @@ case class ParseJson(child: Expression, failOnError: Boolean = true)
     Seq(
       child,
       Literal(SQLConf.get.getConf(SQLConf.VARIANT_ALLOW_DUPLICATE_KEYS), BooleanType),
-      Literal(failOnError, BooleanType)),
-    inputTypes :+ BooleanType :+ BooleanType,
+      Literal(failOnError, BooleanType),
+      Literal(SQLConf.get.getConf(SQLConf.VARIANT_STRING_STRICT_UTF8), BooleanType)),
+    inputTypes :+ BooleanType :+ BooleanType :+ BooleanType,
     returnNullable = !failOnError)
 
   override def inputTypes: Seq[AbstractDataType] =
@@ -429,7 +430,7 @@ case object VariantGet {
 
     if (dataType == VariantType) {
       // Build a new variant, in order to strip off any unnecessary metadata.
-      val builder = new VariantBuilder(false)
+      val builder = new VariantBuilder(false, false)
       builder.appendVariant(v)
       val result = builder.result()
       return new VariantVal(result.getValue, result.getMetadata)

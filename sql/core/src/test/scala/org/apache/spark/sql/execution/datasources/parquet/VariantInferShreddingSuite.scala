@@ -609,7 +609,7 @@ class VariantInferShreddingSuite extends SharedSparkSession with ParquetTest {
     val numRows = 10
     val rdd = spark.sparkContext.parallelize[InternalRow](Nil, numSlices = 1).mapPartitions { _ =>
       val uuid = java.util.UUID.fromString("01020304-0506-0708-090a-0b0c0d0e0f10")
-      val builder = new VariantBuilder(false)
+      val builder = new VariantBuilder(false, false)
       val start = builder.getWritePos
       val fields = new java.util.ArrayList[VariantBuilder.FieldEntry](2)
       val a_id = builder.addKey("a")

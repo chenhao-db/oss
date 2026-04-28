@@ -258,7 +258,8 @@ case class JsonToStructs(
     options: Map[String, String],
     child: Expression,
     timeZoneId: Option[String] = None,
-    variantAllowDuplicateKeys: Boolean = SQLConf.get.getConf(SQLConf.VARIANT_ALLOW_DUPLICATE_KEYS))
+    variantAllowDuplicateKeys: Boolean = SQLConf.get.getConf(SQLConf.VARIANT_ALLOW_DUPLICATE_KEYS),
+    variantStringStrictUtf8: Boolean = SQLConf.get.getConf(SQLConf.VARIANT_STRING_STRICT_UTF8))
   extends UnaryExpression
   with TimeZoneAwareExpression
   with CodegenFallback
@@ -313,7 +314,8 @@ case class JsonToStructs(
 
   @transient
   private lazy val evaluator = new JsonToStructsEvaluator(
-    options, nullableSchema, nameOfCorruptRecord, timeZoneId, variantAllowDuplicateKeys)
+    options, nullableSchema, nameOfCorruptRecord, timeZoneId, variantAllowDuplicateKeys,
+    variantStringStrictUtf8)
 
   override def nullSafeEval(json: Any): Any = evaluator.evaluate(json.asInstanceOf[UTF8String])
 

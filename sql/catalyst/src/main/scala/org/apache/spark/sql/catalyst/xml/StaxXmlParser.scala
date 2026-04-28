@@ -659,7 +659,8 @@ class StaxXmlParser(
         case IntegerType => signSafeToInt(value)
         case dt: DecimalType => castTo(value, dt)
         case VariantType =>
-          val builder = new VariantBuilder(false)
+          val builder = new VariantBuilder(
+            false, SQLConf.get.getConf(SQLConf.VARIANT_STRING_STRICT_UTF8))
           StaxXmlParser.appendXMLCharacterToVariant(builder, value, options)
           val v = builder.result()
           new VariantVal(v.getValue, v.getMetadata)
@@ -1093,7 +1094,8 @@ object StaxXmlParser {
       attributes: Array[Attribute],
       options: XmlOptions): Variant = {
     // The variant builder for the root startElement
-    val rootBuilder = new VariantBuilder(false)
+    val rootBuilder = new VariantBuilder(
+      false, SQLConf.get.getConf(SQLConf.VARIANT_STRING_STRICT_UTF8))
     val start = rootBuilder.getWritePos
 
     // Map to store the variant values of all child fields
@@ -1111,7 +1113,8 @@ object StaxXmlParser {
     // Handle attributes first
     StaxXmlParserUtils.convertAttributesToValuesMap(attributes, options).foreach {
       case (f, v) =>
-        val builder = new VariantBuilder(false)
+        val builder = new VariantBuilder(
+          false, SQLConf.get.getConf(SQLConf.VARIANT_STRING_STRICT_UTF8))
         appendXMLCharacterToVariant(builder, v, options)
         val variants = fieldToVariants.getOrElseUpdate(f, new java.util.ArrayList[Variant]())
         variants.add(builder.result())
@@ -1131,7 +1134,8 @@ object StaxXmlParser {
         case c: Characters if !c.isWhiteSpace =>
           // Treat the character as a value tag field, where we use the [[XMLOptions.valueTag]] as
           // the field key
-          val builder = new VariantBuilder(false)
+          val builder = new VariantBuilder(
+            false, SQLConf.get.getConf(SQLConf.VARIANT_STRING_STRICT_UTF8))
           appendXMLCharacterToVariant(builder, c.getData, options)
           val variants = fieldToVariants.getOrElseUpdate(
             options.valueTag,
@@ -1219,8 +1223,8 @@ object StaxXmlParser {
 
     val fieldValue = if (fieldVariants.size() > 1) {
       // If the field has more than one entry, it's an array field. Build a Variant
-      // array as the field value
-      val arrayBuilder = new VariantBuilder(false)
+      // array as the field value.
+      val arrayBuilder = new VariantBuilder(false, false)
       val arrayStart = arrayBuilder.getWritePos
       val offsets = new util.ArrayList[Integer]()
       fieldVariants.asScala.foreach { v =>

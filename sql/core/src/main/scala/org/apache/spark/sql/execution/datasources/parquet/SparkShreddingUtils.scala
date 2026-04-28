@@ -193,7 +193,7 @@ class ParquetVariantReader(
 
   // A util function to rebuild the variant in binary format from a Parquet variant value.
   protected final def rebuildVariant(row: InternalRow, topLevelMetadata: Array[Byte]): Variant = {
-    val builder = new VariantBuilder(false)
+    val builder = new VariantBuilder(false, false)
     ShreddingUtils.rebuild(SparkShreddedRow(row), topLevelMetadata, schema, builder)
     builder.result()
   }

@@ -58,7 +58,7 @@ public class ShreddingUtils {
       }
       return new Variant(row.getBinary(schema.variantIdx), metadata);
     }
-    VariantBuilder builder = new VariantBuilder(false);
+    VariantBuilder builder = new VariantBuilder(false, false);
     rebuild(row, metadata, schema, builder);
     return builder.result();
   }

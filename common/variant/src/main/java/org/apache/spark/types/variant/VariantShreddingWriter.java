@@ -82,7 +82,7 @@ public class VariantShreddingWriter {
       ShreddedResult[] shreddedValues = new ShreddedResult[objectSchema.length];
 
       // Create a variantBuilder for any field that exist in `v`, but not in the shredding schema.
-      VariantBuilder variantBuilder = new VariantBuilder(false);
+      VariantBuilder variantBuilder = new VariantBuilder(false, false);
       ArrayList<VariantBuilder.FieldEntry> fieldEntries = new ArrayList<>();
       // Keep track of which schema fields we actually found in the Variant value.
       int numFieldsMatched = 0;

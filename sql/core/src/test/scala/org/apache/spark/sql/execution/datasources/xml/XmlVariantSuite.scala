@@ -729,7 +729,7 @@ class XmlVariantSuite extends SharedSparkSession with TestXmlData {
         primitiveValue: Any,
         expectedXml: String,
         extraOptions: Map[String, String] = Map.empty): Unit = {
-      val builder = new VariantBuilder(false)
+      val builder = new VariantBuilder(false, false)
       primitiveValue match {
         case null => builder.appendNull()
         case v: String => builder.appendString(v)

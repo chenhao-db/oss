@@ -6050,6 +6050,16 @@ object SQLConf {
       .booleanConf
       .createWithDefault(false)
 
+  val VARIANT_STRING_STRICT_UTF8 =
+    buildConf("spark.sql.variant.stringStrictUtf8")
+      .internal()
+      .doc("When set to true, building a variant string value will throw an error if the input " +
+        "is not well-formed UTF-8 (e.g. it contains unpaired UTF-16 surrogates). When set to " +
+        "false, invalid sequences are silently replaced with the Unicode replacement character.")
+      .version("4.2.0")
+      .booleanConf
+      .createWithDefault(false)
+
   val VARIANT_ALLOW_READING_SHREDDED =
     buildConf("spark.sql.variant.allowReadingShredded")
       .internal()

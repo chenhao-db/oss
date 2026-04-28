@@ -861,7 +861,7 @@ class VariantExpressionSuite extends SparkFunSuite with ExpressionEvalHelper {
     // Test cast to string. Incidentally, also test construction of UUID via VariantBuilder
     // interface, since we can't currently do it as a Spark cast.
     val uuid = java.util.UUID.fromString("01020304-0506-0708-090a-0b0c0d0e0f10")
-    val builder = new VariantBuilder(false)
+    val builder = new VariantBuilder(false, false)
     builder.appendUuid(uuid)
     val bytes = builder.result().getValue
     checkCast(bytes, StringType,

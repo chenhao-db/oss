@@ -35,16 +35,16 @@ import org.apache.spark.unsafe.types.{UTF8String, VariantVal}
 
 class VariantShreddingSuite extends SharedSparkSession with ParquetTest {
   def parseJson(s: String): VariantVal = {
-    val v = VariantBuilder.parseJson(s, false)
+    val v = VariantBuilder.parseJson(s, false, false)
     new VariantVal(v.getValue, v.getMetadata)
   }
 
   // Make a variant value binary by parsing a JSON string.
-  def value(s: String): Array[Byte] = VariantBuilder.parseJson(s, false).getValue
+  def value(s: String): Array[Byte] = VariantBuilder.parseJson(s, false, false).getValue
 
   // Make a variant metadata binary that includes a set of keys.
   def metadata(keys: Seq[String]): Array[Byte] = {
-    val builder = new VariantBuilder(false)
+    val builder = new VariantBuilder(false, false)
     keys.foreach(builder.addKey)
     builder.result().getMetadata
   }
@@ -52,9 +52,9 @@ class VariantShreddingSuite extends SharedSparkSession with ParquetTest {
   // Build a shredded variant value binary. Its IDs refer to the metadata built from `metadataKeys`,
   // which can include more keys than the JSON string contains.
   def shreddedValue(s: String, metadataKeys: Seq[String]): Array[Byte] = {
-    val builder = new VariantBuilder(false)
+    val builder = new VariantBuilder(false, false)
     metadataKeys.foreach(builder.addKey)
-    builder.appendVariant(VariantBuilder.parseJson(s, false))
+    builder.appendVariant(VariantBuilder.parseJson(s, false, false))
     builder.result().getValue
   }
 

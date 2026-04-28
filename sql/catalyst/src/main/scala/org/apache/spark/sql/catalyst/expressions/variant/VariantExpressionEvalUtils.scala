@@ -22,6 +22,7 @@ import scala.util.control.NonFatal
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.{ArrayData, MapData}
 import org.apache.spark.sql.errors.QueryExecutionErrors
+import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types._
 import org.apache.spark.types.variant.{Variant, VariantBuilder, VariantSizeLimitException, VariantUtil}
 import org.apache.spark.unsafe.types.{UTF8String, VariantVal}
@@ -34,7 +35,8 @@ object VariantExpressionEvalUtils {
   def parseJson(
       input: UTF8String,
       allowDuplicateKeys: Boolean = false,
-      failOnError: Boolean = true): VariantVal = {
+      failOnError: Boolean = true,
+      stringStrictUtf8: Boolean = false): VariantVal = {
     def parseJsonFailure(exception: Throwable): VariantVal = {
       if (failOnError) {
         throw exception
@@ -43,7 +45,7 @@ object VariantExpressionEvalUtils {
       }
     }
     try {
-      val v = VariantBuilder.parseJson(input.toString, allowDuplicateKeys)
+      val v = VariantBuilder.parseJson(input.toString, allowDuplicateKeys, stringStrictUtf8)
       new VariantVal(v.getValue, v.getMetadata)
     } catch {
       case _: VariantSizeLimitException =>
@@ -74,7 +76,8 @@ object VariantExpressionEvalUtils {
   def castToVariant(input: Any, dataType: DataType): VariantVal = {
     // Enforce strict check because it is illegal for input struct/map/variant to contain duplicate
     // keys.
-    val builder = new VariantBuilder(false)
+    val builder = new VariantBuilder(
+      false, SQLConf.get.getConf(SQLConf.VARIANT_STRING_STRICT_UTF8))
     buildVariant(builder, input, dataType)
     val v = builder.result()
     new VariantVal(v.getValue, v.getMetadata)

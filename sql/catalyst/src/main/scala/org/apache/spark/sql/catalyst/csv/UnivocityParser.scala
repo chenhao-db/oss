@@ -139,6 +139,8 @@ class UnivocityParser(
           options.dateFormatOption.isEmpty
       }
 
+  private val variantStringStrictUtf8 = SQLConf.get.getConf(SQLConf.VARIANT_STRING_STRICT_UTF8)
+
   // When `options.needHeaderForSingleVariantColumn` is true, it will be set to the header column
   // names by `CSVDataSource.readHeaderForSingleVariantColumn`.
   var headerColumnNames: Option[Array[String]] = None
@@ -366,7 +368,7 @@ class UnivocityParser(
         val extra = numFields - singleVariantFieldConverters.length
         singleVariantFieldConverters.appendAll(Array.fill(extra)(new VariantValueConverter))
       }
-      val builder = new VariantBuilder(false)
+      val builder = new VariantBuilder(false, variantStringStrictUtf8)
       val start = builder.getWritePos
       val fields = new java.util.ArrayList[VariantBuilder.FieldEntry](numFields)
       for (i <- 0 until numFields) {
@@ -470,7 +472,7 @@ class UnivocityParser(
     private val isDefaultNTZ = SQLConf.get.timestampType == TimestampNTZType
 
     override def apply(s: String): Any = {
-      val builder = new VariantBuilder(false)
+      val builder = new VariantBuilder(false, variantStringStrictUtf8)
       convertInput(builder, s)
       val v = builder.result()
       new VariantVal(v.getValue, v.getMetadata)
